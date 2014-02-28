@@ -1,0 +1,24 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.swatchdb.data.Artistas" table="artistas" dynamic-insert="false" dynamic-update="false">
+        <id name="idartistas" type="integer">
+            <column name="idartistas"/>
+            <generator class="identity"/>
+        </id>
+        <property name="nombre" type="string">
+            <column name="nombre" length="200" not-null="true"/>
+        </property>
+        <property name="descripcion" type="string">
+            <column name="descripcion" length="1000"/>
+        </property>
+        <property name="notas" type="string">
+            <column name="notas" length="200"/>
+        </property>
+        <set name="relojeses" inverse="true" cascade="">
+            <key>
+                <column name="idartistas"/>
+            </key>
+            <one-to-many class="com.swatchdb.data.Relojes"/>
+        </set>
+    </class>
+</hibernate-mapping>

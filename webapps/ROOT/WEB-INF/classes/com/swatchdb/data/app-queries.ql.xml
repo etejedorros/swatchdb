@@ -1,0 +1,31 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <meta attribute="@design.default-queries"/>
+    <query name="buscaRelojes">
+        <query-param name="varref" type="java.lang.String"/>
+        <query-param name="varnombre" type="java.lang.String"/>
+        <query-param name="varfamilia" type="java.lang.Integer"/>
+        <query-param name="varcoleccion" type="java.lang.Integer"/>
+        <query-param name="vartema" type="java.lang.Integer"/>
+        <query-param name="vartipo" type="java.lang.Integer"/>
+        <query-param name="varestado" type="java.lang.Integer"/>
+        <query-param name="varartista" type="java.lang.Integer"/>
+        SELECT reloj.referencia as referencia, reloj.nombre as nombre, familia.nombre as familia, coleccion.nombre as coleccion, tema.nombre as tema, tipo.nombre as tipo, estado.nombre as estado, artista.nombre as artista, reloj.cantidad as cantidad, reloj.es_access as access, reloj.es_loomi as loomi, reloj.es_b2b as b2b, reloj.notas as notas
+FROM Relojes as reloj
+LEFT OUTER JOIN reloj.familias AS familia
+LEFT OUTER JOIN reloj.colecciones AS coleccion
+LEFT OUTER JOIN reloj.temas AS tema
+LEFT OUTER JOIN reloj.tipos AS tipo
+LEFT OUTER JOIN reloj.estados AS estado
+LEFT OUTER JOIN reloj.artistas AS artista
+WHERE
+(:varref IS NULL OR reloj.referencia LIKE &apos;%&apos; || :varref || &apos;%&apos;) AND
+(:varnombre IS NULL OR reloj.nombre LIKE &apos;%&apos; || :varnombre || &apos;%&apos;) AND
+(:varfamilia is NULL OR familia.idfamilias = :varfamilia) AND
+(:varcoleccion is NULL OR coleccion.idcolecciones = :varcoleccion) AND
+(:vartema is NULL OR tema.idtemas = :vartema) AND
+(:vartipo is NULL OR tipo.idtipos = :vartipo) AND
+(:varestado is NULL OR estado.idestados = :varestado) AND
+(:varartista is NULL OR artista.idartistas = :varartista)
+    </query>
+</hibernate-mapping>

@@ -1,0 +1,133 @@
+/*
+ *  Copyright (C) 2012-2013 CloudJee, Inc. All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+dojo.provide("wm.base.widget.Picture");
+
+dojo.declare("wm.Picture", [wm.Control, wm.TouchMixinOptional], {
+	aspect: "none",
+	hint: "",
+	width: "100px",
+	height: "100px",
+	link: "",
+	source: "",
+	init: function() {
+	    this.inherited(arguments);
+	    var d = this.domNode;
+	    d.innerHTML = '<a><img></a>';
+	    dojo.addClass(d, "wmpicture");
+	    this.linkNode = d.firstChild;
+	    this._touchNode = this.img = this.linkNode.firstChild;
+	    dojo.addClass(this.img, "wmpicture-image");
+	    //this.connect(this.img, "load", this, "imageLoaded");
+        if (!wm.isMobile) {
+    	    this.connect(this.img, "click", this, "_onclick");
+    	    this.connect(this.linkNode, "click", this, "_onclick");
+        }
+	    this.setSource(this.source);
+	    this.setAspect(this.aspect);
+	    this.setLink(this.link);
+	    if (this.imageList) this.imageListChanged();
+	},
+	postInit: function() {
+	    this.inherited(arguments);
+	    if (this.onclick != this.constructor.prototype.onclick) {
+	        dojo.addClass(this.domNode, "onClickEvent");
+	    }
+	},
+	setSource: function(inSource) {
+	    this.source = inSource || "";
+	    this.valueChanged("source", this.source);
+	    this.img.style.display = this.source ? "" : "none"; // hiding now done by className
+	    var root;
+	    if (this.source.slice(0, 4) == "http" || this.source.slice(0, 1) == "/") {
+	        root = "";
+	    } else if (this.source.indexOf("lib/") == 0) {
+	        root = dojo.moduleUrl("lib").path.replace(/lib\/$/, "");
+	    } else {
+	        root = this.getPath();
+	    }
+	    this.img.src = root + this.source;
+	},
+
+	setAspect: function(inAspect) {
+	    var s = this.img.style,
+	        w = "width",
+	        h = "height",
+	        a = this.aspect = inAspect;
+	    s.width = (a == "v" ? "100%" : "");
+	    s.height = (a == "h" ? "100%" : "");
+	},
+	setLink: function(inLink) {
+	    this.link = inLink;
+	    if (inLink) {
+	        this.linkNode.target = "_blank";
+	        this.linkNode.href = inLink;
+	    } else this.linkNode.removeAttribute("href");
+
+	    /* Make it bindable */
+	    this.valueChanged("link", inLink);
+	},
+	onTouchEnd: function(evt, isMove) {
+		if (isMove) return;
+		/* Force inputs to fire onchange events and update bound service var inputs if they have focus.
+		 * Normally, on touch devices, a touchstart and touchend can happen without the editor ever losing focus,
+		 * triggering its dijit's onBlur, and delivering new values.
+		 */
+		if (document.activeElement.tagName == "INPUT") {
+			var id = document.activeElement.id;
+			var d = dijit.byId(id);
+			if (d) d._onBlur();
+			else document.activeElement.blur();
+		}
+		if (!this._disabled) {
+    		this.onclick(evt);
+    	}
+	},
+    _onclick: function(inEvent) {
+        dojo.stopEvent(inEvent);
+        if (this._disabled) return;
+        var pseudoEvt = dojo.isIE && inEvent ? {
+                    clientX: inEvent.clientX,
+                    clientY: inEvent.clientY,
+                    offsetX: inEvent.offsetX,
+                    offsetY: inEvent.offsetY,
+                    screenX: inEvent.screenX,
+                    screenY: inEvent.screenY,
+                    pageX: inEvent.pageX,
+                    pageY: inEvent.pageY,
+                    x: inEvent.x,
+                    y: inEvent.y,
+                    target: inEvent.target,
+                    currentTarget: inEvent.currentTarget,
+                    "type": inEvent.type
+                } : inEvent || {};
+        window.setTimeout(dojo.hitch(this, "onclick",pseudoEvt), 5);
+    },
+	onclick: function() {
+	},
+
+
+	imageListChanged: function() {
+	    this.inherited(arguments);
+	    if (this._imageList) {
+		this.linkNode.style.display = "inline-block";
+		this.linkNode.className = "wmpicture " + this._imageList.getImageClass(this.imageIndex);
+	    }
+	},
+    toHtml: function() {
+        var style = this.toHtmlStyles();
+	   return "<img " + style + " class='wmpicture' style='width:" + this.bounds.w + "px;height:" + this.bounds.h + "px' src='" + this.img.src + "'/>";
+    }
+});
+

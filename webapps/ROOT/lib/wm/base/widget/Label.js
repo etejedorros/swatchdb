@@ -1,0 +1,278 @@
+/*
+* Copyright (C) 2012-2013 CloudJee, Inc. All rights reserved.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+* http://www.apache.org/licenses/LICENSE-2.0
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+dojo.provide("wm.base.widget.Label");
+dojo.require("wm.base.widget.Formatters");
+
+dojo.declare("wm.Label", [wm.Control, wm.TouchMixinOptional], {
+    width: "200px",
+    height: "24px",
+    caption: 'Label',
+    link: '',
+    display: '',
+    //resizeToFit: "(Resize to Fit)",
+    padding: 4,
+    singleLine: true,
+    align: "none",
+    init: function() {
+        dojo.addClass(this.domNode, "wmlabel");
+        this.inherited(arguments);
+        if (!wm.isMobile) {
+            this.connect(this.domNode, "onclick", this, "_onclick");
+        }
+        // this.connectEvents(this.domNode, ["dblclick"]); WAVEMAKER: Uncomment this if we find a good use for this...
+    },
+    build: function() {
+        this.inherited(arguments);
+        if (!this.noSizeNode) {
+            this.sizeNode = document.createElement("div");
+            dojo.addClass(this.sizeNode, "wmSizeNode");
+            this.domNode.appendChild(this.sizeNode);
+        } else {
+            this.sizeNode = this.domNode;
+        }
+    },
+	onTouchEnd: function(evt, isMove) {
+		if (isMove) return;
+		/* Force inputs to fire onchange events and update bound service var inputs if they have focus.
+		 * Normally, on touch devices, a touchstart and touchend can happen without the editor ever losing focus,
+		 * triggering its dijit's onBlur, and delivering new values.
+		 */
+		if (document.activeElement.tagName == "INPUT") {
+			var id = document.activeElement.id;
+			var d = dijit.byId(id);
+			if (d) d._onBlur();
+			else document.activeElement.blur();
+		}
+		if (!this._disabled) {
+    		this.click(evt);
+    	}
+	},
+    _onclick: function(inEvent) {
+        if (this.name == "label2") {
+            console.log("Label2");
+        }
+        if (this._disabled) return;
+        var pseudoEvt = dojo.isIE && inEvent ? {
+            clientX: inEvent.clientX,
+            clientY: inEvent.clientY,
+            offsetX: inEvent.offsetX,
+            offsetY: inEvent.offsetY,
+            screenX: inEvent.screenX,
+            screenY: inEvent.screenY,
+            pageX: inEvent.pageX,
+            pageY: inEvent.pageY,
+            x: inEvent.x,
+            y: inEvent.y,
+            target: inEvent.target,
+            currentTarget: inEvent.currentTarget,
+            "type": inEvent.type
+        } : inEvent || {};
+        window.setTimeout(dojo.hitch(this, "click", pseudoEvt), 5);
+    },
+    click: function(e) {
+        this.onclick(e);
+    },
+    /* Uncomment this if/when we find a good use for it
+dblclick: function(e) {
+this.ondblclick(e);
+},
+ondblclick: function(inEvent) {
+}, */
+    postInit: function() {
+        this.inherited(arguments);
+        this.caption = this.label || this.content || this.caption;
+        // bc
+        delete this.content;
+        delete this.label;
+        this.renderLabel();
+        this.valueChanged("caption", this.caption);
+        this.valueChanged("link", this.link);
+        if (this.onclick != this.constructor.prototype.onclick) {
+            dojo.addClass(this.domNode, "onClickEvent");
+        }
+    },
+    renderLabel: function() {
+        if (this._loading) return;
+
+        var c = this.caption;
+        if (this.$.format) {
+            c = this.$.format.format(c);
+        } else if (this.display && dojo.isFunction(this.owner[this.display])) {
+            try {
+                c = this.owner[this.display](this, c);
+            } catch (e) {
+                console.error("Formatter error in " + this.toString() + ": " + e);
+            }
+        }
+
+        if (this.link) {
+            if (this._disabled) {
+                c = ['<a href="#">', c, '</a>'].join('');
+            } else {
+                c = ['<a ', (this.link.indexOf("#") == -1 && this.link.indexOf("javascript") == -1) ? 'target="_blank" ' : '', 'href="', this.link, '">', c, '</a>'].join('');
+            }
+        }
+        if (this.domNode.innerHTML != c) this.sizeNode.innerHTML = c;
+        var whitespace = (this.singleLine || this.autoSizeWidth) ? "nowrap" : "normal";
+        if (this.domNode.style.whiteSpace != whitespace) this.domNode.style.whiteSpace = whitespace;
+        var align = (this.align == "none") ? "" : this.align;
+        if (this._align != align && (!this.styles || !this.styles.textAlign)) {
+            this.domNode.style.textAlign = align;
+            this._align = align;
+        }
+        //this.reflowParent();
+        //this.doAutoSize();
+    },
+    setDisabled: function(inDisabled) {
+        this.inherited(arguments);
+        if (!this._cupdating) {
+            this.renderLabel();
+        }
+    },
+    setCaption: function(inCaption) {
+        if (inCaption == undefined) inCaption = "";
+        var innerHTML = this.sizeNode.innerHTML;
+        if (inCaption && dojo.isArray(inCaption)) {
+            inCaption = inCaption.join(', ');
+        } else if (inCaption && dojo.isObject(inCaption) && (!this.$.format || this.$.format instanceof wm.ArrayFormatter === false)) {
+            inCaption = "";
+        }
+        this.caption = inCaption;
+        this.renderLabel();
+        if (innerHTML != this.sizeNode.innerHTML && (this.autoSizeHeight || this.autoSizeWidth)) {
+            this.scheduleAutoSize();
+        }
+
+        /* Make it bindable */
+        this.valueChanged("caption", inCaption);
+    },
+
+    scheduleAutoSize: function() {
+        this._needsAutoSize = true;
+        return wm.job(this.getRuntimeId() + ": doAutoSize", 10, dojo.hitch(this, function() {
+            this.doAutoSize(true, false);
+        }));
+    },
+    _onShowParent: function() {
+        if (this._needsAutoSize) {
+            this.scheduleAutoSize();
+        }
+    },
+    doAutoSize: function(setSize, force) {
+        if (this._doingAutoSize || !this.autoSizeHeight && !this.autoSizeWidth) return;
+        if (!force && !this._needsAutoSize) return;
+
+        if (this.isAncestorHidden()) {
+            return;
+        }
+
+        this._doingAutoSize = true;
+        this._needsAutoSize = false;
+
+        var sizeNode = this.sizeNode;
+        var contentHeight = sizeNode.offsetHeight;
+        var contentWidth = sizeNode.offsetWidth;
+        if (this.autoSizeHeight) {
+            var newHeight = contentHeight + this.padBorderMargin.t + this.padBorderMargin.b;
+            if (newHeight < this.minHeight) {
+                newHeight = this.minHeight;
+            }
+
+            /* Account for space needed for scrollbars */
+            if (contentWidth > this.bounds.w) {
+                newHeight += 17;
+            }
+            this.bounds.h = newHeight;
+            this.height = newHeight + "px";
+            /*
+if (setSize) {
+this.setHeight(newHeight + "px");
+} else {
+this.bounds.h = newHeight;
+this.height = newHeight + "px";
+}
+*/
+
+            var p = this.parent;
+            while (p.parent && (p.autoSizeHeight || p.fitToContentHeight)) {
+                p = p.parent;
+            }
+            p.delayedReflow();
+
+        }
+        if (this.autoSizeWidth) {
+
+            var newWidth = contentWidth + this.padBorderMargin.l + this.padBorderMargin.r; /* Account for space needed for scrollbars */
+            if (contentHeight > this.bounds.h) {
+                newWidth += 17;
+            }
+            this.bounds.w = newWidth;
+            this.width = newWidth + "px";
+            /*
+if (setSize) {
+this.setWidth(newWidth + "px");
+} else {
+this.bounds.w = newWidth;
+this.width = newWidth + "px";
+}
+*/
+            var p = this.parent;
+            while (p.parent && (p.autoSizeWidth || p.fitToContentWidth)) {
+                p = p.parent;
+            }
+            p.delayedReflow();
+        }
+
+
+        // the line underneath updates panel's width property. Therefore only required for studio.
+        if (this.isDesignLoaded() && dojo.indexOf(studio.designer.selected, this) != -1)
+            studio.inspector.reinspect();
+        this._doingAutoSize = false;
+    },
+    setLink: function(inLink) {
+        var oldLink = this.link;
+        this.link = inLink;
+        this.renderLabel();
+
+        /* Make it bindable */
+        this.valueChanged("link", inLink);
+    },
+    setSingleLine: function(inSingleLine) {
+        var oldSingleLine = this.singleLine;
+        this.singleLine = inSingleLine;
+        if (oldSingleLine != inSingleLine) this.domNode.style.lineHeight = (inSingleLine) ? this.bounds.h + "px" : "normal";
+        this.renderLabel();
+        if (inSingleLine && this.autoSizeHeight) this.autoSizeHeight = false;
+
+        if (inSingleLine != oldSingleLine && (this.autoSizeHeight || this.autoSizeWidth)) {
+            this.scheduleAutoSize();
+        }
+    },
+    setAlign: function(inAlign) {
+        this.align = inAlign;
+        this.renderLabel();
+    },
+    formatChanged: function() {
+        this.renderLabel();
+    },
+    onclick: function(inEvent) {},
+
+    toHtml: function() {
+        var style = this.toHtmlStyles();
+        return "<div " + style + " style='text-align:" + (this.align || "left") + ";' id='" + this.domNode.id + "'>" + (this.sizeNode.innerHTML) + "</div>";
+    }
+});
+
+// NOTE: This sizing node is used by ALL classes that need a sizing node (wm.Html, wm.Base, etc...)
+wm.Label.sizingNode = document.createElement("div");

@@ -1,0 +1,81 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.swatchdb.data.Relojes" table="relojes" dynamic-insert="false" dynamic-update="false">
+        <id name="idrelojes" type="integer">
+            <column name="idrelojes"/>
+            <generator class="identity"/>
+        </id>
+        <property name="referencia" type="string">
+            <column name="referencia" length="45" not-null="true"/>
+        </property>
+        <property name="nombre" type="string">
+            <column name="nombre" length="45"/>
+        </property>
+        <property name="cantidad" type="integer">
+            <column name="cantidad"/>
+        </property>
+        <property name="notas" type="string">
+            <column name="notas" length="200"/>
+        </property>
+        <property name="fechaAlta" type="date">
+            <column name="fecha_alta" length="10"/>
+        </property>
+        <property name="fechaModif" type="date">
+            <column name="fecha_modif" length="10"/>
+        </property>
+        <property name="idusuarioAlta" type="integer">
+            <column name="idusuario_alta"/>
+        </property>
+        <property name="idusuarioModif" type="integer">
+            <column name="idusuario_modif"/>
+        </property>
+        <property name="precio" type="double">
+            <column name="precio" precision="22"/>
+        </property>
+        <property name="esEspecial" type="boolean">
+            <column name="es_especial"/>
+        </property>
+        <property name="limitacion" type="integer">
+            <column name="limitacion"/>
+        </property>
+        <property name="numero" type="integer">
+            <column name="numero"/>
+        </property>
+        <property name="descripcion" type="string">
+            <column name="descripcion" length="1000"/>
+        </property>
+        <property name="es_access" type="boolean">
+            <column name="es_access"/>
+        </property>
+        <property name="es_loomi" type="boolean">
+            <column name="es_loomi"/>
+        </property>
+        <property name="es_b2b" type="boolean">
+            <column name="es_b2b"/>
+        </property>
+        <many-to-one name="familias" class="com.swatchdb.data.Familias" cascade="none">
+            <column name="idfamilias"/>
+        </many-to-one>
+        <many-to-one name="artistas" class="com.swatchdb.data.Artistas" cascade="none">
+            <column name="idartistas"/>
+        </many-to-one>
+        <many-to-one name="estados" class="com.swatchdb.data.Estados" cascade="none">
+            <column name="idestados"/>
+        </many-to-one>
+        <many-to-one name="temas" class="com.swatchdb.data.Temas" cascade="none">
+            <column name="idtemas"/>
+        </many-to-one>
+        <many-to-one name="tipos" class="com.swatchdb.data.Tipos" cascade="none">
+            <column name="idtipos"/>
+        </many-to-one>
+        <many-to-one name="colecciones" class="com.swatchdb.data.Colecciones" cascade="none">
+            <column name="idcolecciones"/>
+        </many-to-one>
+        <set name="fotoses" inverse="true" cascade="none">
+            <key>
+                <column name="relojes_idrelojes" not-null="true"/>
+            </key>
+            <one-to-many class="com.swatchdb.data.Fotos"/>
+        </set>
+    </class>
+</hibernate-mapping>

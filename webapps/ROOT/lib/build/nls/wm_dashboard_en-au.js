@@ -1,0 +1,1 @@
+dojo.provide("dojo.nls.wm_dashboard_en-au");dojo.provide("dijit.nls.loading");dijit.nls.loading._built=true;dojo.provide("dijit.nls.loading.en_au");dijit.nls.loading.en_au={"loadingState":"Loading...","errorState":"Sorry, an error occurred"};

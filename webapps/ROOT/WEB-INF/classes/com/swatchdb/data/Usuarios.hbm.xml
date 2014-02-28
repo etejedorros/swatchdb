@@ -1,0 +1,18 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.swatchdb.data.Usuarios" table="usuarios" dynamic-insert="false" dynamic-update="false">
+        <id name="idusuarios" type="integer">
+            <column name="idusuarios"/>
+            <generator class="identity"/>
+        </id>
+        <property name="nombre" type="string">
+            <column name="nombre" length="45" not-null="true"/>
+        </property>
+        <property name="clave" type="string">
+            <column name="clave" length="45"/>
+        </property>
+        <property name="perfil" type="string">
+            <column name="perfil" length="45"/>
+        </property>
+    </class>
+</hibernate-mapping>

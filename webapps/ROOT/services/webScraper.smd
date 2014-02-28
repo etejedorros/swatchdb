@@ -1,0 +1,13 @@
+{
+	"methods": [{
+		"name": "sampleJavaOperation",
+		"operationType": null,
+		"parameters": [{
+			"name": "referencia",
+			"type": "java.lang.String"
+		}],
+		"returnType": "webScraper$datosReloj"
+	}],
+	"serviceType": "JSON-RPC",
+	"serviceURL": "webScraper.json"
+}
