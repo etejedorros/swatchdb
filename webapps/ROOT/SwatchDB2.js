@@ -12,7 +12,7 @@ dojo.declare("SwatchDB2", wm.Application, {
 	"name": "", 
 	"phoneGapLoginPage": "Login", 
 	"phoneMain": "", 
-	"projectSubVersion": "Beta20", 
+	"projectSubVersion": "Beta21", 
 	"projectVersion": "2", 
 	"sessionExpirationHandler": "nothing", 
 	"studioVersion": "6.6.0M2", 
